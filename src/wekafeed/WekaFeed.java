@@ -20,7 +20,9 @@ public class WekaFeed extends AbstractClassifier {
   public Node[][] neuralNode;
   public static long seed = System.currentTimeMillis();
   public static Random rand = new Random(seed);
+
   public static double learningrate=1;
+  
   public static int nkelas; // atribut ini ada untuk tes saja
   
   public int inputCount;
@@ -791,6 +793,7 @@ public class WekaFeed extends AbstractClassifier {
     //datatestLoc = "C:\\Users\\CXXXV\\Documents\\WekaFeed\\src\\wekafeed\\Team.arff";//scan.nextLine();
     datatestLoc = scan.nextLine();
     
+    
     if (useModel == 0) {
         
         // build a new model
@@ -841,6 +844,7 @@ public class WekaFeed extends AbstractClassifier {
         System.out.println("Jumlah hidden layer: " + hiddenLayerCount_main);
         System.out.println("Jumlah nodes hidden layer: " + hiddenCount_main);
         System.out.println("Jumlah iterasi pembentukan model: " + numOfIteration);
+		System.out.println("Learning rate: " + learningrate);
         
         
         // READ the data train
