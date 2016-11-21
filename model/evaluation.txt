@@ -1,0 +1,25 @@
+Results 
+Correctly Classified Instances         159               78.7129 %
+Incorrectly Classified Instances        43               21.2871 %
+Kappa statistic                          0.7582
+Mean absolute error                      0.0305
+Root mean squared error                  0.1562
+Relative absolute error                 17.2822 %
+Root relative squared error             52.6248 %
+Total Number of Instances              202     
+
+=== Confusion Matrix ===
+
+  a  b  c  d  e  f  g  h  i  j   <-- classified as
+ 17  4  1  0  0  1  0  0  2  0 |  a = b_ball
+  2 30  1  0  1  0  2  0  1  0 |  b = row
+  0  0 23  0  0  0  0  0  0  0 |  c = netball
+  1  2  0 13  0  1  1  1  3  0 |  d = swim
+  0  1  0  0 14  1  0  2  1  0 |  e = field
+  0  0  0  3  2 24  0  0  0  0 |  f = t_400m
+  0  1  0  0  0  0 13  0  1  0 |  g = t_sprnt
+  0  1  0  0  0  2  0  7  1  0 |  h = tennis
+  0  1  0  0  1  1  0  0 14  0 |  i = w_polo
+  0  0  0  0  0  0  0  0  0  4 |  j = gym
+
+BUILD SUCCESSFUL (total time: 63 minutes 40 seconds)

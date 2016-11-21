@@ -20,7 +20,9 @@ public class WekaFeed extends AbstractClassifier {
   public Node[][] neuralNode;
   public static long seed = System.currentTimeMillis();
   public static Random rand = new Random(seed);
-  public static double learningrate;
+
+  public static double learningrate=1;
+  
   public static int nkelas; // atribut ini ada untuk tes saja
   
   public int inputCount;
@@ -28,6 +30,8 @@ public class WekaFeed extends AbstractClassifier {
   public int hiddenCount;
   public int outputCount;
   public int totalLayer;
+  
+  public static int numOfIteration;
   
   
   /* Used model attributes */
@@ -478,6 +482,7 @@ public class WekaFeed extends AbstractClassifier {
     int banyakData = data.numInstances();
     
     
+    for (int idx0 = 0; idx0 < numOfIteration; idx0++) {
     
     for(index=0; index<banyakData; index++)
     {
@@ -495,7 +500,7 @@ public class WekaFeed extends AbstractClassifier {
 
       //create target
       //System.out.println("target==============");
-      System.out.println(curr.classValue());
+     // System.out.println(curr.classValue());
       double[] target = new double[banyakKelas]; //anggap inisialisasi 0
       int indexKelas = (int) curr.classValue();
       target[indexKelas] = 1;
@@ -509,6 +514,8 @@ public class WekaFeed extends AbstractClassifier {
       feedforward();
       backpropagation(target);
     }
+    
+    }
   }  
 //==============================================================================
   
@@ -516,7 +523,7 @@ public class WekaFeed extends AbstractClassifier {
   public double[] distributionForInstance(Instance instance)
                                  throws java.lang.Exception{
      
-    //System.out.println("Classify#####################");
+    System.out.println("Classify#####################");
     int banyakAtribut = instance.numAttributes()-1;
     double[] input = new double[banyakAtribut];
     for(int i=0; i<banyakAtribut; i++){
@@ -586,7 +593,7 @@ public class WekaFeed extends AbstractClassifier {
                     fw.write("node" + String.valueOf(neuralNode[idx0][idx1].id) + "\n");
                     
                     for(int key: neuralNode[idx0][idx1].edges.keySet()){
-                        System.out.println("IDs: "+key+" values: "+neuralNode[idx0][idx1].edges.get(key));
+                        //System.out.println("IDs: "+key+" values: "+neuralNode[idx0][idx1].edges.get(key));
                         
                         fw.write(String.valueOf(key));
                         fw.write(" ");
@@ -760,9 +767,10 @@ public class WekaFeed extends AbstractClassifier {
   public static void main(String[] args) {
     
     // number of nodes for each layer
-    int inputCount=1;
-    int hiddenCount=1;
-    int outputCount=1;
+    int inputCount_main=1;
+    int hiddenCount_main=1;
+    int outputCount_main=1;
+    int hiddenLayerCount_main=1;
     
     // user input variables
     Scanner scan = new Scanner(System.in);
@@ -782,7 +790,8 @@ public class WekaFeed extends AbstractClassifier {
     
     // GET the data test location
     System.out.println("Lokasi data test: ");
-    datatestLoc = "D:\\wekafolder\\data\\Team.arff";//scan.nextLine();
+    //datatestLoc = "C:\\Users\\CXXXV\\Documents\\WekaFeed\\src\\wekafeed\\Team.arff";//scan.nextLine();
+    datatestLoc = scan.nextLine();
     
     
     if (useModel == 0) {
@@ -791,13 +800,22 @@ public class WekaFeed extends AbstractClassifier {
         
         // GET the data train location
         System.out.println("Lokasi data train: ");
-        datatrainLoc = "D:\\wekafolder\\data\\Team.arff";//scan.nextLine();
+        //datatrainLoc = "C:\\Users\\CXXXV\\Documents\\WekaFeed\\src\\wekafeed\\Team.arff";//scan.nextLine();
+        datatrainLoc = scan.nextLine();
         
         // GET the amount of hidden layer
-        System.out.println("Jumlah hidden layer (min. 1): ");
-        hiddenCount = scan.nextInt();
+        System.out.println("Jumlah hidden layer (max. 1): ");
+        hiddenLayerCount_main = scan.nextInt();
 
-        //scan.nextLine();
+        if (hiddenLayerCount_main > 0) {
+            
+            // GET the amount of nodes in the hidden layer
+            System.out.println("Jumlah nodes hidden layer: ");
+            hiddenCount_main = scan.nextInt();
+            
+        }
+        
+        scan.nextLine();
         
         // GET learning rate
         System.out.println("Learning rate: ");
@@ -805,44 +823,62 @@ public class WekaFeed extends AbstractClassifier {
         
         scan.nextLine();
         
+        // GET the amount of iteration (buildClassifier)
+        System.out.println("Number of iteration: ");
+        numOfIteration = scan.nextInt();
+        
+        
+        scan.nextLine();
+        
+        
         // GET the saved model location
         System.out.println("Lokasi penyimpanan model: ");
-        modelLoc = "D:\\wekafolder\\model\\Team.txt";//scan.nextLine();
+        //modelLoc = "C:\\Users\\CXXXV\\Documents\\WekaFeed\\src\\wekafeed\\Team.txt";//scan.nextLine();
+        modelLoc = scan.nextLine();
         
         // Confirmation
         System.out.println("KONFIRMASI");
         System.out.println("===========================");
         System.out.println("Lokasi data train: " + datatrainLoc);
         System.out.println("Lokasi model: " + modelLoc);
-        System.out.println("Jumlah hidden layer: " + hiddenCount);
-        System.out.println("Learning rate: " + learningrate);
+        System.out.println("Jumlah hidden layer: " + hiddenLayerCount_main);
+        System.out.println("Jumlah nodes hidden layer: " + hiddenCount_main);
+        System.out.println("Jumlah iterasi pembentukan model: " + numOfIteration);
+		System.out.println("Learning rate: " + learningrate);
         
         
         // READ the data train
         loaddata load = new loaddata(datatrainLoc);
         System.out.println("Banyak atribut adalah " + loaddata.banyakatribut);
         System.out.println("Banyak kelas adalah " + loaddata.banyakkelas);
+        
+        // normalize the data train
         Instances normalizedDataset = load.train_data;
+        
         try {
 
           Normalization nm = new Normalization(load.train_data);
           normalizedDataset = nm.normalize();
 
           System.out.println();
-         // System.out.println("Normalized data train");
-         // System.out.println(normalizedDataset);
+          System.out.println("Normalized data train");
+          System.out.println(normalizedDataset);
 
         } catch (Exception e) {
 
           e.printStackTrace();
 
         }
+        
         // initialize the amount of layer
-        inputCount = loaddata.banyakatribut;
-        outputCount = loaddata.banyakkelas;
+        inputCount_main = loaddata.banyakatribut;
+        outputCount_main = loaddata.banyakkelas;
 
         // start the training
-        WekaFeed weka = new WekaFeed(inputCount, 1, 10, outputCount);
+        WekaFeed weka = new WekaFeed(inputCount_main, 
+                                    hiddenLayerCount_main, 
+                                    hiddenCount_main, 
+                                    outputCount_main);
 
         //sebelum FFNN
         System.out.println("SEBELUM FFNN=====================");
@@ -855,19 +891,22 @@ public class WekaFeed extends AbstractClassifier {
         try {
             
             System.out.println("Building classifier...");
-            weka.buildClassifier(load.train_data);
-        
+            
+            weka.buildClassifier(normalizedDataset);
+            
         } catch(Exception e){
             e.printStackTrace();
         }
 
         
         // SAVE model
+        System.out.println("Saving model...");
         weka.saveModel(modelLoc);
         
         
         //setelah FFNN
         System.out.println("SETELAH FFNN=====================");
+        
         try{
           Instances data1 = normalizedDataset;
           Instances data2 = normalizedDataset;
