@@ -1,11 +1,19 @@
 
 package wekafeed;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.util.Scanner;
 import java.util.Random;
 import weka.classifiers.AbstractClassifier;
 import weka.core.Instances;
 import weka.core.Instance;
 import java.lang.*;
+
 public class WekaFeed extends AbstractClassifier{
   
   /* Node attributes */
@@ -14,6 +22,11 @@ public class WekaFeed extends AbstractClassifier{
   public static Random rand = new Random(seed);
   public static int learningrate=1;
   public static int nkelas; // atribut ini ada untuk tes saja
+  
+  
+  /* Used model attributes */
+  public static int useModel = 0;
+  
   
 //==============================================================================
   WekaFeed(int inputCount, int hiddenLayerCount, int hiddenCount, 
@@ -61,9 +74,21 @@ public class WekaFeed extends AbstractClassifier{
       {
         for(int k=0; k<nextLayerNodes; k++)
         {
-          neuralNode[i][j].edges.put(neuralNode[i+1][k].id, rand.nextDouble());
-          //neuralNode[i][j].edges.put(neuralNode[i+1][k].id, (double) getidnode(neuralNode[i+1][k])); //untuk bahan tes
-        }
+            
+            if (useModel == 0) {
+             
+                // use random values as the weights
+                neuralNode[i][j].edges.put(neuralNode[i+1][k].id, rand.nextDouble());
+                //neuralNode[i][j].edges.put(neuralNode[i+1][k].id, (double) getidnode(neuralNode[i+1][k])); //untuk bahan tes
+            
+            } else {
+                
+                // use the saved values as the weights
+                //neuralNode[i][j].edges.put(tbd, tbd);
+                
+            }
+            
+            }
       }
     }
   }
@@ -473,43 +498,217 @@ public class WekaFeed extends AbstractClassifier{
   }  
 //==============================================================================
   
+  public void saveModel(String modelLoc) {
+      
+      /**
+       * layer0
+       * node0
+       * 4 0.8810026686007016
+       * 5 0.5564514201581299
+       * 6 0.6042151161838017
+       * node1
+       * 4 0.22580075032373467
+       * 5 0.43134952799541526
+       * 6 0.13492755106657728
+       * Node3----------------------
+       * 4 0.23005339489634324
+       * 5 0.37658443147084025
+       * 6 0.5102098568929565
+       */
+      
+        FileWriter fw = null;
+        
+        try {
+            
+            fw = new FileWriter(modelLoc);
+            
+            int layerCount = neuralNode.length;
+            int layerNodes1;
+            
+            for (int idx0 = 0; idx0 < layerCount; idx0++) {
+                
+                fw.write("layer" + String.valueOf(idx0) + "\n");
+                
+                layerNodes1 = neuralNode[idx0].length;
+                for (int idx1 = 0; idx1 < layerNodes1; idx1++) {
+                    
+                    fw.write("node" + String.valueOf(idx1) + "\n");
+                    
+                    for(int key: neuralNode[idx0][idx1].edges.keySet()){
+                        System.out.println("IDs: "+key+" values: "+neuralNode[idx0][idx1].edges.get(key));
+                        
+                        fw.write(String.valueOf(key));
+                        fw.write(" ");
+                        fw.write(String.valueOf(neuralNode[idx0][idx1].edges.get(key)));
+                        fw.write("\n");
+                    }
 
+                }
+            }
+            
+            System.out.println("Model SAVED");
+            
+            fw.close();
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+        } 
+        
+  }
+  
+//==============================================================================
+  
+  /*
+    protected static void readModel(String fileName) {
+		
+        try {
+
+                // validasi dan load model
+                ObjectInputStream in = new ObjectInputStream(new FileInputStream(fileName));
+                Object savedModel = in.readObject();
+                classifier = (FilteredClassifier) savedModel;
+                in.close();
+
+                // output pesan sukses pembacaan file model
+                System.out.println("[OK] Membaca file model" + "\n");
+                System.out.println("Lokasi file model: " + fileName + "\n");
+                System.out.println("------------------------------------------------------------------------" + "\n");
+
+                // menampilkan model yang telah dibaca
+                System.out.println(classifier);
+
+        } catch (Exception e) {
+
+                // kasus jika pembacaan file model gagal
+                System.out.println("[FAIL] Gagal membaca file model dari: " + fileName + "\n");
+                System.out.println("------------------------------------------------------------------------" + "\n");
+
+        }
+
+    }
+  */
+//==============================================================================
+   
   public static void main(String[] args) {
+    
+    // number of nodes for each layer
     int inputCount=1;
     int hiddenCount=1;
     int outputCount=1;
     
-    loaddata load = new loaddata("C:\\Program Files\\Weka-3-8\\data\\iris.arff");
-    System.out.println("Banyak atribut adalah " + loaddata.banyakatribut);
-    System.out.println("Banyak kelas adalah " + loaddata.banyakkelas);
-   
-    inputCount=loaddata.banyakatribut;
-    outputCount=loaddata.banyakkelas;
+    // user input variables
+    Scanner scan = new Scanner(System.in);
+    String datatrainLoc;
+    String datatestLoc;
+    String modelLoc;
     
-    WekaFeed weka = new WekaFeed(inputCount, 1, outputCount, outputCount);
     
-    //sebelum FFNN
-    System.out.println("SEBELUM FFNN=====================");
-    weka.printAllEdge();
-    System.out.println("NODE############################");
-    weka.printAllNode();
-    System.out.println("===============================");
-    System.out.println("");
+    // Build new model or use the existing one
+    System.out.println("Pilihan model:");
+    System.out.println("0. Build a new model");
+    System.out.println("1. Use the existing model");
+    System.out.print("Jawaban: ");
+    useModel = scan.nextInt();
+    scan.nextLine();
     
-    try{
-      weka.buildClassifier(load.train_data);
+    
+    // GET the data test location
+    System.out.println("Lokasi data test: ");
+    datatestLoc = scan.nextLine();
+    
+    
+    if (useModel == 0) {
+        
+        // build a new model
+        
+        // GET the data train location
+        System.out.println("Lokasi data train: ");
+        datatrainLoc = scan.nextLine();
+        
+        // GET the amount of hidden layer
+        System.out.println("Jumlah hidden layer (min. 1): ");
+        hiddenCount = scan.nextInt();
+
+        scan.nextLine();
+        
+        // GET learning rate
+        System.out.println("Learning rate: ");
+        learningrate = scan.nextInt();
+        
+        scan.nextLine();
+        
+        // GET the saved model location
+        System.out.println("Lokasi penyimpanan model: ");
+        modelLoc = scan.nextLine();
+        
+        // Confirmation
+        System.out.println("KONFIRMASI");
+        System.out.println("===========================");
+        System.out.println("Lokasi data train: " + datatrainLoc);
+        System.out.println("Lokasi model: " + modelLoc);
+        System.out.println("Jumlah hidden layer: " + hiddenCount);
+        
+        
+        // READ the data train
+        loaddata load = new loaddata(datatrainLoc);
+        System.out.println("Banyak atribut adalah " + loaddata.banyakatribut);
+        System.out.println("Banyak kelas adalah " + loaddata.banyakkelas);
+
+        // initialize the amount of layer
+        inputCount = loaddata.banyakatribut;
+        outputCount = loaddata.banyakkelas;
+
+        // start the training
+        WekaFeed weka = new WekaFeed(inputCount, 1, outputCount, outputCount);
+
+        //sebelum FFNN
+        System.out.println("SEBELUM FFNN=====================");
+        weka.printAllEdge();
+        System.out.println("NODE############################");
+        weka.printAllNode();
+        System.out.println("===============================");
+        System.out.println("");
+
+        try {
+            
+            System.out.println("Building classifier...");
+            weka.buildClassifier(load.train_data);
+        
+        } catch(Exception e){
+            e.printStackTrace();
+        }
+
+        
+        // SAVE model
+        weka.saveModel(modelLoc);
+        
+        
+        //setelah FFNN
+        System.out.println("SETELAH FFNN=====================");
+        weka.printAllEdge();
+        System.out.println("NODE############################");
+        weka.printAllNode();
+        System.out.println("===============================");
+        System.out.println("");
+        
+    } else {
+        
+        // use the existing model
+        
+        // GET the saved model location
+        System.out.println("Lokasi penyimpanan model: ");
+        modelLoc = scan.nextLine();
+        
+        // Confirmation
+        System.out.println("KONFIRMASI");
+        System.out.println("===========================");
+        System.out.println("Lokasi model: " + modelLoc);
+        
+        // READ model
+        //readModel(modelLoc);
+        
     }
-    catch(Exception e){
-      e.printStackTrace();
-    }
     
-    //setelah FFNN
-    System.out.println("SETELAH FFNN=====================");
-    weka.printAllEdge();
-    System.out.println("NODE############################");
-    weka.printAllNode();
-    System.out.println("===============================");
-    System.out.println("");
     
 //    weka.assignInput(new double[]{1,2,3,4});
 //    //weka.assignPostEdgeWeight(0, new double[]{4,5,6,7});

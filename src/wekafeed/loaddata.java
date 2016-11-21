@@ -1,9 +1,7 @@
 package wekafeed;
 
 import weka.core.Instances;
-import weka.core.DenseInstance;
 import weka.core.converters.ArffLoader.ArffReader;
-import weka.core.*;
 import java.io.*;
 
 
@@ -34,7 +32,7 @@ public class loaddata {
 		} catch (IOException e) {
 			e.printStackTrace();
 				// kasus jika pembacaan file gagal
-				System.out.println("[FAIL] Gagal mengakses dataset: " + fileName + "\n");
+				System.out.println("[FAIL] Gagal mengakses datatrain: " + fileName + "\n");
 				System.out.println("--------------------------------------------------------------------" + "\n");
 		}
     }
