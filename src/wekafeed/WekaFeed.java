@@ -791,7 +791,7 @@ public class WekaFeed extends AbstractClassifier {
         
         // GET the data train location
         System.out.println("Lokasi data train: ");
-        datatrainLoc = "D:\wekafolder\data\\Team.arff";//scan.nextLine();
+        datatrainLoc = "D:\\wekafolder\\data\\Team.arff";//scan.nextLine();
         
         // GET the amount of hidden layer
         System.out.println("Jumlah hidden layer (min. 1): ");
@@ -807,7 +807,7 @@ public class WekaFeed extends AbstractClassifier {
         
         // GET the saved model location
         System.out.println("Lokasi penyimpanan model: ");
-        modelLoc = "D:\wekafolder\model\Team.txt";//scan.nextLine();
+        modelLoc = "D:\\wekafolder\\model\\Team.txt";//scan.nextLine();
         
         // Confirmation
         System.out.println("KONFIRMASI");
