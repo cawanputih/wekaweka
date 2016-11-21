@@ -7,6 +7,7 @@ import java.io.FileWriter;
 import java.util.Scanner;
 import java.util.Random;
 import weka.classifiers.AbstractClassifier;
+import weka.classifiers.Evaluation;
 import weka.core.Instances;
 import weka.core.Instance;
 
@@ -514,6 +515,23 @@ public class WekaFeed extends AbstractClassifier {
   @Override
   public double[] distributionForInstance(Instance instance)
                                  throws java.lang.Exception{
+     
+    //System.out.println("Classify#####################");
+    int banyakAtribut = instance.numAttributes()-1;
+    double[] input = new double[banyakAtribut];
+    for(int i=0; i<banyakAtribut; i++){
+      input[i] = instance.value(i);
+      //System.out.println("input: "+input[i]);
+    }
+    
+    assignInput(input);
+    
+    feedforward();
+    
+    double[] output = neuralNodeOutput();
+    for(int i=0; i<3; i++){
+//        System.out.println("kelas"+i+": "+input[i]);
+    }
     return neuralNodeOutput();
   }  
   
@@ -764,7 +782,7 @@ public class WekaFeed extends AbstractClassifier {
     
     // GET the data test location
     System.out.println("Lokasi data test: ");
-    datatestLoc = scan.nextLine();
+    datatestLoc = "C:\\Users\\CXXXV\\Documents\\WekaFeed\\src\\wekafeed\\Team.arff";//scan.nextLine();
     
     
     if (useModel == 0) {
@@ -773,13 +791,13 @@ public class WekaFeed extends AbstractClassifier {
         
         // GET the data train location
         System.out.println("Lokasi data train: ");
-        datatrainLoc = scan.nextLine();
+        datatrainLoc = "C:\\Users\\CXXXV\\Documents\\WekaFeed\\src\\wekafeed\\Team.arff";//scan.nextLine();
         
         // GET the amount of hidden layer
         System.out.println("Jumlah hidden layer (min. 1): ");
         hiddenCount = scan.nextInt();
 
-        scan.nextLine();
+        //scan.nextLine();
         
         // GET learning rate
         System.out.println("Learning rate: ");
@@ -789,7 +807,7 @@ public class WekaFeed extends AbstractClassifier {
         
         // GET the saved model location
         System.out.println("Lokasi penyimpanan model: ");
-        modelLoc = scan.nextLine();
+        modelLoc = "C:\\Users\\CXXXV\\Documents\\WekaFeed\\src\\wekafeed\\Team.txt";//scan.nextLine();
         
         // Confirmation
         System.out.println("KONFIRMASI");
@@ -803,13 +821,27 @@ public class WekaFeed extends AbstractClassifier {
         loaddata load = new loaddata(datatrainLoc);
         System.out.println("Banyak atribut adalah " + loaddata.banyakatribut);
         System.out.println("Banyak kelas adalah " + loaddata.banyakkelas);
+        Instances normalizedDataset = load.train_data;
+        try {
 
+          Normalization nm = new Normalization(load.train_data);
+          normalizedDataset = nm.normalize();
+
+          System.out.println();
+         // System.out.println("Normalized data train");
+         // System.out.println(normalizedDataset);
+
+        } catch (Exception e) {
+
+          e.printStackTrace();
+
+        }
         // initialize the amount of layer
         inputCount = loaddata.banyakatribut;
         outputCount = loaddata.banyakkelas;
 
         // start the training
-        WekaFeed weka = new WekaFeed(inputCount, 1, outputCount, outputCount);
+        WekaFeed weka = new WekaFeed(inputCount, 1, 10, outputCount);
 
         //sebelum FFNN
         System.out.println("SEBELUM FFNN=====================");
@@ -835,11 +867,17 @@ public class WekaFeed extends AbstractClassifier {
         
         //setelah FFNN
         System.out.println("SETELAH FFNN=====================");
-        weka.printAllEdge();
-        System.out.println("NODE############################");
-        weka.printAllNode();
-        System.out.println("===============================");
-        System.out.println("");
+        try{
+          Instances data1 = normalizedDataset;
+          Instances data2 = normalizedDataset;
+          Evaluation eval = new Evaluation(data1);
+          eval.evaluateModel(weka, data2);
+          System.out.println(eval.toSummaryString("\nResults ", false));
+          System.out.println(eval.toMatrixString());
+        }
+        catch(Exception e){
+          e.printStackTrace();
+        }
         
     } else {
         
