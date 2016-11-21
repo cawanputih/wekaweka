@@ -20,7 +20,7 @@ public class WekaFeed extends AbstractClassifier {
   public Node[][] neuralNode;
   public static long seed = System.currentTimeMillis();
   public static Random rand = new Random(seed);
-  public static int learningrate=1;
+  public static double learningrate;
   public static int nkelas; // atribut ini ada untuk tes saja
   
   public int inputCount;
@@ -782,7 +782,7 @@ public class WekaFeed extends AbstractClassifier {
     
     // GET the data test location
     System.out.println("Lokasi data test: ");
-    datatestLoc = "C:\\Users\\CXXXV\\Documents\\WekaFeed\\src\\wekafeed\\Team.arff";//scan.nextLine();
+    datatestLoc = "D:\\wekafolder\\data\\Team.arff";//scan.nextLine();
     
     
     if (useModel == 0) {
@@ -791,7 +791,7 @@ public class WekaFeed extends AbstractClassifier {
         
         // GET the data train location
         System.out.println("Lokasi data train: ");
-        datatrainLoc = "C:\\Users\\CXXXV\\Documents\\WekaFeed\\src\\wekafeed\\Team.arff";//scan.nextLine();
+        datatrainLoc = "D:\wekafolder\data\\Team.arff";//scan.nextLine();
         
         // GET the amount of hidden layer
         System.out.println("Jumlah hidden layer (min. 1): ");
@@ -801,13 +801,13 @@ public class WekaFeed extends AbstractClassifier {
         
         // GET learning rate
         System.out.println("Learning rate: ");
-        learningrate = scan.nextInt();
+        learningrate = scan.nextDouble();
         
         scan.nextLine();
         
         // GET the saved model location
         System.out.println("Lokasi penyimpanan model: ");
-        modelLoc = "C:\\Users\\CXXXV\\Documents\\WekaFeed\\src\\wekafeed\\Team.txt";//scan.nextLine();
+        modelLoc = "D:\wekafolder\model\Team.txt";//scan.nextLine();
         
         // Confirmation
         System.out.println("KONFIRMASI");
@@ -815,6 +815,7 @@ public class WekaFeed extends AbstractClassifier {
         System.out.println("Lokasi data train: " + datatrainLoc);
         System.out.println("Lokasi model: " + modelLoc);
         System.out.println("Jumlah hidden layer: " + hiddenCount);
+        System.out.println("Learning rate: " + learningrate);
         
         
         // READ the data train
