@@ -1,20 +1,19 @@
 
 package wekafeed;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileInputStream;
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.FileWriter;
-import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.util.Scanner;
 import java.util.Random;
 import weka.classifiers.AbstractClassifier;
 import weka.core.Instances;
 import weka.core.Instance;
-import java.lang.*;
 
-public class WekaFeed extends AbstractClassifier{
+public class WekaFeed extends AbstractClassifier {
+  
+  /* After reading model */
+  public static Node[][] neuralNode_read;
   
   /* Node attributes */
   public Node[][] neuralNode;
@@ -23,14 +22,43 @@ public class WekaFeed extends AbstractClassifier{
   public static int learningrate=1;
   public static int nkelas; // atribut ini ada untuk tes saja
   
+  public int inputCount;
+  public int hiddenLayerCount;
+  public int hiddenCount;
+  public int outputCount;
+  public int totalLayer;
+  
   
   /* Used model attributes */
   public static int useModel = 0;
-  
+
   
 //==============================================================================
+  
+  // Contructor without arguments
+  WekaFeed() {
+      
+  }
+  
+//==============================================================================
+  
+  // Constructor with arguments
   WekaFeed(int inputCount, int hiddenLayerCount, int hiddenCount, 
           int outputCount){
+      
+    // initialize the attributes
+    this.inputCount = inputCount;
+    this.hiddenLayerCount = hiddenLayerCount;
+    this.hiddenCount = hiddenCount;
+    this.outputCount = outputCount;
+    
+    if (hiddenLayerCount == 0) {
+        totalLayer = 2;
+    } else {
+        totalLayer = 3;
+    }
+            
+    
     int layerCount = 0;  
     neuralNode = new Node[2+hiddenLayerCount][];
     
@@ -74,21 +102,12 @@ public class WekaFeed extends AbstractClassifier{
       {
         for(int k=0; k<nextLayerNodes; k++)
         {
-            
-            if (useModel == 0) {
              
-                // use random values as the weights
-                neuralNode[i][j].edges.put(neuralNode[i+1][k].id, rand.nextDouble());
-                //neuralNode[i][j].edges.put(neuralNode[i+1][k].id, (double) getidnode(neuralNode[i+1][k])); //untuk bahan tes
-            
-            } else {
-                
-                // use the saved values as the weights
-                //neuralNode[i][j].edges.put(tbd, tbd);
-                
-            }
-            
-            }
+            // use random values as the weights
+            neuralNode[i][j].edges.put(neuralNode[i+1][k].id, rand.nextDouble());
+            //neuralNode[i][j].edges.put(neuralNode[i+1][k].id, (double) getidnode(neuralNode[i+1][k])); //untuk bahan tes
+        
+        }
       }
     }
   }
@@ -491,16 +510,18 @@ public class WekaFeed extends AbstractClassifier{
     }
   }  
 //==============================================================================
+  
   @Override
   public double[] distributionForInstance(Instance instance)
                                  throws java.lang.Exception{
     return neuralNodeOutput();
   }  
+  
 //==============================================================================
   
   public void saveModel(String modelLoc) {
       
-      /**
+      /** SAVED MODEL FORMAT
        * layer0
        * node0
        * 4 0.8810026686007016
@@ -525,6 +546,18 @@ public class WekaFeed extends AbstractClassifier{
             int layerCount = neuralNode.length;
             int layerNodes1;
             
+            // write the amount of layer
+            fw.write(String.valueOf(layerCount) + "\n");
+            
+            
+            // write the amount of nodes for the corresponding layer
+            for (int idx0 = 0; idx0 < layerCount; idx0++) {
+                
+                fw.write(String.valueOf(neuralNode[idx0].length) + "\n");
+               
+            }
+            
+           
             for (int idx0 = 0; idx0 < layerCount; idx0++) {
                 
                 fw.write("layer" + String.valueOf(idx0) + "\n");
@@ -532,7 +565,7 @@ public class WekaFeed extends AbstractClassifier{
                 layerNodes1 = neuralNode[idx0].length;
                 for (int idx1 = 0; idx1 < layerNodes1; idx1++) {
                     
-                    fw.write("node" + String.valueOf(idx1) + "\n");
+                    fw.write("node" + String.valueOf(neuralNode[idx0][idx1].id) + "\n");
                     
                     for(int key: neuralNode[idx0][idx1].edges.keySet()){
                         System.out.println("IDs: "+key+" values: "+neuralNode[idx0][idx1].edges.get(key));
@@ -546,7 +579,9 @@ public class WekaFeed extends AbstractClassifier{
                 }
             }
             
+            System.out.println();
             System.out.println("Model SAVED");
+            System.out.println();
             
             fw.close();
             
@@ -557,36 +592,151 @@ public class WekaFeed extends AbstractClassifier{
   }
   
 //==============================================================================
-  
-  /*
-    protected static void readModel(String fileName) {
-		
+ 
+    public static void readModel(String fileName) {
+        
+        BufferedReader br = null;
+        
         try {
 
-                // validasi dan load model
-                ObjectInputStream in = new ObjectInputStream(new FileInputStream(fileName));
-                Object savedModel = in.readObject();
-                classifier = (FilteredClassifier) savedModel;
-                in.close();
+            int totalLayer_read = 0;
+            int inputCount_read = 0;
+            int hiddenCount_read = 0;
+            int outputCount_read = 0;
+            String line;
+            
+            br = new BufferedReader(new FileReader(fileName));
+            
+            // read the amount of layer
+            line = br.readLine();
+            totalLayer_read = Integer.parseInt(line);
+            
+            // read the amount of nodes for each layer
+            for (int idx0 = 0; idx0 < totalLayer_read; idx0++) {
+                
+                line = br.readLine();
+                if (idx0 == 0) {
+                    inputCount_read = Integer.parseInt(line);
+                } else if (idx0 == 1) {
+                    
+                    if (totalLayer_read == 2) {
+                        // no hidden layer
+                        outputCount_read = Integer.parseInt(line);
+                    } else {
+                        // with hidden layer
+                        hiddenCount_read = Integer.parseInt(line);
+                    }
+                    
+                } else {
+                    outputCount_read = Integer.parseInt(line);
+                }
+            }
+            
+            // CONFIRMATION
+            System.out.println();
+            System.out.println("Confirmation");
+            System.out.println("=============================");
+            System.out.println("totalLayer: " + totalLayer_read);
+            System.out.println("inputCount: " + inputCount_read);
+            System.out.println("hiddenCount: " + hiddenCount_read);
+            System.out.println("outputCount: " + outputCount_read);
+            
+            
+            int layerCount = 0;  
+            neuralNode_read = new Node[totalLayer_read][];
 
-                // output pesan sukses pembacaan file model
-                System.out.println("[OK] Membaca file model" + "\n");
-                System.out.println("Lokasi file model: " + fileName + "\n");
-                System.out.println("------------------------------------------------------------------------" + "\n");
+            //input Node
+            neuralNode_read[layerCount] = new Node[inputCount_read];
+            for(int j=0; j<inputCount_read; j++){
+              neuralNode_read[layerCount][j] = new Node();
+            }
+            layerCount++;
 
-                // menampilkan model yang telah dibaca
-                System.out.println(classifier);
+            //hidden Node
+            if (totalLayer_read == 2) {
+                
+                neuralNode_read[layerCount] = new Node[outputCount_read];
+                for(int j=0; j<outputCount_read; j++){
+                  neuralNode_read[layerCount][j] = new Node();
+                }
+                
+            } else {
+                
+                neuralNode_read[layerCount] = new Node[hiddenCount_read];
+                for(int j=0; j<hiddenCount_read; j++){
+                  neuralNode_read[layerCount][j] = new Node();
+                }
 
+                layerCount++;
+                
+                neuralNode_read[layerCount] = new Node[outputCount_read];
+                for(int j=0; j<outputCount_read; j++){
+                  neuralNode_read[layerCount][j] = new Node();
+                }
+            }
+         
+            
+            String[] splitted;
+            int counter = 0;
+            
+            for (int idx0 = 0; idx0 < totalLayer_read - 1; idx0++) {
+                
+                // read "layer"+idx0
+                line = br.readLine();
+                System.out.println("ok " + line);
+                
+                // read node
+                line = br.readLine();
+                System.out.println("ok " + line);
+                
+                int layerNodes = neuralNode_read[idx0].length;
+                for(int j=0; j<layerNodes; j++)
+                {
+                    counter++;
+                    
+                    while ((line = br.readLine()) != null) {
+                        if (!line.equals("node"+String.valueOf(counter))) {
+
+                            if (line.equals("layer"+String.valueOf(idx0+1))) {
+                                break;
+                            }
+                            
+                            // splitted[0] = ID dari next layer
+                            // splitted[1] = weight between current node and one node in the next layer
+                            splitted = line.split(" ");
+                            
+                            neuralNode_read[idx0][j].edges.put(Integer.parseInt(splitted[0]), 
+                                                            Double.parseDouble(splitted[1]));
+
+                            System.out.println("ok " + splitted[0] + " " + splitted[1]);
+
+                        } else {
+                            System.out.println("BREAK: " + line);
+                            break;
+                        }
+                    }
+                    
+                    if (line.equals("layer"+String.valueOf(idx0+1))) {
+                        break;
+                    }
+                }
+                    
+            }
+            
+            br.close();
+            
+            
         } catch (Exception e) {
 
-                // kasus jika pembacaan file model gagal
-                System.out.println("[FAIL] Gagal membaca file model dari: " + fileName + "\n");
-                System.out.println("------------------------------------------------------------------------" + "\n");
-
+            // kasus jika pembacaan file model gagal
+            System.out.println("[FAIL] Gagal membaca file model dari: " + fileName + "\n");
+            System.out.println("------------------------------------------------------------------------" + "\n");
+            e.printStackTrace();
+            
         }
 
     }
-  */
+ 
 //==============================================================================
    
   public static void main(String[] args) {
@@ -704,8 +854,14 @@ public class WekaFeed extends AbstractClassifier{
         System.out.println("===========================");
         System.out.println("Lokasi model: " + modelLoc);
         
+ 
+        //WekaFeed weka = new WekaFeed();
+        
         // READ model
-        //readModel(modelLoc);
+        readModel(modelLoc);
+        
+        // CLASSIFY
+        
         
     }
     
