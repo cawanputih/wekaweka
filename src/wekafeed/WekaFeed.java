@@ -14,15 +14,13 @@ import weka.core.Instance;
 public class WekaFeed extends AbstractClassifier {
   
   /* After reading model */
-  public static Node[][] neuralNode_read;
+  public Node[][] neuralNode_read;
   
   /* Node attributes */
   public Node[][] neuralNode;
   public static long seed = System.currentTimeMillis();
   public static Random rand = new Random(seed);
-
   public static double learningrate=1;
-  
   public static int nkelas; // atribut ini ada untuk tes saja
   
   public int inputCount;
@@ -109,8 +107,10 @@ public class WekaFeed extends AbstractClassifier {
         {
              
             // use random values as the weights
-            neuralNode[i][j].edges.put(neuralNode[i+1][k].id, rand.nextDouble());
-            //neuralNode[i][j].edges.put(neuralNode[i+1][k].id, (double) getidnode(neuralNode[i+1][k])); //untuk bahan tes
+            //neuralNode[i][j].edges.put(neuralNode[i+1][k].id, rand.nextDouble());
+neuralNode[i][j].edges.put(neuralNode[i+1][k].id, 0.5);
+                        
+//neuralNode[i][j].edges.put(neuralNode[i+1][k].id, (double) getidnode(neuralNode[i+1][k])); //untuk bahan tes
         
         }
       }
@@ -618,7 +618,7 @@ public class WekaFeed extends AbstractClassifier {
   
 //==============================================================================
  
-    public static void readModel(String fileName) {
+    public void readModel(String fileName) {
         
         BufferedReader br = null;
         
@@ -789,10 +789,9 @@ public class WekaFeed extends AbstractClassifier {
     
     
     // GET the data test location
-    System.out.println("Lokasi data test: ");
+    //System.out.println("Lokasi data test: ");
     //datatestLoc = "C:\\Users\\CXXXV\\Documents\\WekaFeed\\src\\wekafeed\\Team.arff";//scan.nextLine();
-    datatestLoc = scan.nextLine();
-    
+    //datatestLoc = scan.nextLine();
     
     if (useModel == 0) {
         
@@ -802,7 +801,7 @@ public class WekaFeed extends AbstractClassifier {
         System.out.println("Lokasi data train: ");
         //datatrainLoc = "C:\\Users\\CXXXV\\Documents\\WekaFeed\\src\\wekafeed\\Team.arff";//scan.nextLine();
         datatrainLoc = scan.nextLine();
-        
+        //datatrainLoc = datatestLoc;
         // GET the amount of hidden layer
         System.out.println("Jumlah hidden layer (max. 1): ");
         hiddenLayerCount_main = scan.nextInt();
@@ -844,10 +843,9 @@ public class WekaFeed extends AbstractClassifier {
         System.out.println("Jumlah hidden layer: " + hiddenLayerCount_main);
         System.out.println("Jumlah nodes hidden layer: " + hiddenCount_main);
         System.out.println("Jumlah iterasi pembentukan model: " + numOfIteration);
-		System.out.println("Learning rate: " + learningrate);
         
         
-        // READ the data train
+        // READ the dloadata train
         loaddata load = new loaddata(datatrainLoc);
         System.out.println("Banyak atribut adalah " + loaddata.banyakatribut);
         System.out.println("Banyak kelas adalah " + loaddata.banyakkelas);
@@ -923,6 +921,12 @@ public class WekaFeed extends AbstractClassifier {
         
         // use the existing model
         
+        String datatest_demo;
+        System.out.println("Lokasi data Team_test: ");
+        datatest_demo = scan.nextLine();
+        
+        
+        
         // GET the saved model location
         System.out.println("Lokasi penyimpanan model: ");
         modelLoc = scan.nextLine();
@@ -933,11 +937,52 @@ public class WekaFeed extends AbstractClassifier {
         System.out.println("Lokasi model: " + modelLoc);
         
  
-        //WekaFeed weka = new WekaFeed();
-        
         // READ model
-        readModel(modelLoc);
+        /*
+        WekaFeed weka = new WekaFeed(inputCount_main, 
+                                    hiddenLayerCount_main, 
+                                    hiddenCount_main, 
+                                    outputCount_main);
+        */
         
+        WekaFeed weka = new WekaFeed();
+        
+        weka.readModel(modelLoc);
+        
+        weka.neuralNode = weka.neuralNode_read;
+        
+        loaddata load = new loaddata(datatest_demo);
+        
+        // normalize the data train
+        Instances normalizedDataset = load.train_data;
+        
+        try {
+
+          Normalization nm = new Normalization(load.train_data);
+          normalizedDataset = nm.normalize();
+
+          System.out.println();
+          System.out.println("Normalized data test");
+          System.out.println(normalizedDataset);
+
+        } catch (Exception e) {
+
+          e.printStackTrace();
+
+        }
+        
+        
+        try{
+          Instances data1 = normalizedDataset;
+          Instances data2 = normalizedDataset;
+          Evaluation eval = new Evaluation(data1);
+          eval.evaluateModel(weka, data2);
+          System.out.println(eval.toSummaryString("\nResults ", false));
+          System.out.println(eval.toMatrixString());
+        }
+        catch(Exception e){
+          e.printStackTrace();
+        }
         // CLASSIFY
         
         
