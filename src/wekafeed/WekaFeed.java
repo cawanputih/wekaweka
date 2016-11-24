@@ -10,6 +10,10 @@ import weka.classifiers.AbstractClassifier;
 import weka.classifiers.Evaluation;
 import weka.core.Instances;
 import weka.core.Instance;
+import weka.filters.unsupervised.attribute.NominalToBinary;
+import weka.filters.unsupervised.attribute.StringToNominal;
+import weka.filters.unsupervised.attribute.Remove;
+import weka.filters.Filter;
 
 public class WekaFeed extends AbstractClassifier {
   
@@ -22,6 +26,8 @@ public class WekaFeed extends AbstractClassifier {
   public static Random rand = new Random(seed);
   public static double learningrate=1;
   public static int nkelas; // atribut ini ada untuk tes saja
+  public static int indexClass; // atribut ini ada untuk indeks kelas
+  
   
   public int inputCount;
   public int hiddenLayerCount;
@@ -91,6 +97,7 @@ public class WekaFeed extends AbstractClassifier {
     connectNodes();
     
     nkelas=outputCount;
+    
   }
 //==============================================================================
   public void connectNodes(){
@@ -107,10 +114,7 @@ public class WekaFeed extends AbstractClassifier {
         {
              
             // use random values as the weights
-            //neuralNode[i][j].edges.put(neuralNode[i+1][k].id, rand.nextDouble());
-neuralNode[i][j].edges.put(neuralNode[i+1][k].id, 0.5);
-                        
-//neuralNode[i][j].edges.put(neuralNode[i+1][k].id, (double) getidnode(neuralNode[i+1][k])); //untuk bahan tes
+            neuralNode[i][j].edges.put(neuralNode[i+1][k].id, rand.nextDouble());
         
         }
       }
@@ -493,15 +497,19 @@ neuralNode[i][j].edges.put(neuralNode[i+1][k].id, 0.5);
       //create initial value
       //System.out.println("input===============");
       double[] input = new double[banyakAtribut];
-      for(int i=0; i<banyakAtribut; i++){
-        input[i] = curr.value(i);
+      int j=0;
+      for(int i=0; i<banyakAtribut+1; i++){
+        if(i!=indexClass){
+        input[j] = curr.value(i);
+		j++;
+		}
         //System.out.println(input[i]);
       }
 
       //create target
       //System.out.println("target==============");
      // System.out.println(curr.classValue());
-      double[] target = new double[banyakKelas]; //anggap inisialisasi 0
+      double[] target = new double[21]; //anggap inisialisasi 0
       int indexKelas = (int) curr.classValue();
       target[indexKelas] = 1;
       for(int i=0; i<banyakKelas; i++){
@@ -523,14 +531,24 @@ neuralNode[i][j].edges.put(neuralNode[i+1][k].id, 0.5);
   public double[] distributionForInstance(Instance instance)
                                  throws java.lang.Exception{
      
-    System.out.println("Classify#####################");
+
     int banyakAtribut = instance.numAttributes()-1;
     double[] input = new double[banyakAtribut];
+    
+    int j=0;
+      for(int i=0; i<banyakAtribut+1; i++){
+        if(i!=indexClass){
+        input[j] = instance.value(i);
+		j++;
+		}
+        //System.out.println(input[i]);
+      }
+    /*  
     for(int i=0; i<banyakAtribut; i++){
       input[i] = instance.value(i);
       //System.out.println("input: "+input[i]);
     }
-    
+    */
     assignInput(input);
     
     feedforward();
@@ -788,20 +806,14 @@ neuralNode[i][j].edges.put(neuralNode[i+1][k].id, 0.5);
     scan.nextLine();
     
     
-    // GET the data test location
-    //System.out.println("Lokasi data test: ");
-    //datatestLoc = "C:\\Users\\CXXXV\\Documents\\WekaFeed\\src\\wekafeed\\Team.arff";//scan.nextLine();
-    //datatestLoc = scan.nextLine();
-    
     if (useModel == 0) {
         
         // build a new model
         
         // GET the data train location
         System.out.println("Lokasi data train: ");
-        //datatrainLoc = "C:\\Users\\CXXXV\\Documents\\WekaFeed\\src\\wekafeed\\Team.arff";//scan.nextLine();
-        datatrainLoc = scan.nextLine();
-        //datatrainLoc = datatestLoc;
+        datatrainLoc = "D:\\wekafolder\\data\\student-train.arff";
+        
         // GET the amount of hidden layer
         System.out.println("Jumlah hidden layer (max. 1): ");
         hiddenLayerCount_main = scan.nextInt();
@@ -831,10 +843,10 @@ neuralNode[i][j].edges.put(neuralNode[i+1][k].id, 0.5);
         
         
         // GET the saved model location
-        System.out.println("Lokasi penyimpanan model: ");
-        //modelLoc = "C:\\Users\\CXXXV\\Documents\\WekaFeed\\src\\wekafeed\\Team.txt";//scan.nextLine();
-        modelLoc = scan.nextLine();
         
+        modelLoc = "D:\\wekafolder\\model\\newmodel.txt";
+        System.out.println("Lokasi penyimpanan model: " + modelLoc);
+       
         // Confirmation
         System.out.println("KONFIRMASI");
         System.out.println("===========================");
@@ -850,27 +862,53 @@ neuralNode[i][j].edges.put(neuralNode[i+1][k].id, 0.5);
         System.out.println("Banyak atribut adalah " + loaddata.banyakatribut);
         System.out.println("Banyak kelas adalah " + loaddata.banyakkelas);
         
-        // normalize the data train
+        // Standardisasi data agar range tidak besar sekali
         Instances normalizedDataset = load.train_data;
         
+        
+        
         try {
-
-          Normalization nm = new Normalization(load.train_data);
-          normalizedDataset = nm.normalize();
+			
+			//setClassIndex diisikan sesuai dengan index class yang akan dicari
+			//untuk team diisikan 12
+			//untuk student diisikan 26
+			normalizedDataset.setClassIndex(26);
+			
+			
+			
+			
+			//Bagian ini komentarnya di hilangkan untuk student_train dan Student-mat-test 
+			
+			//==============================================================================
+			Remove m_Filter = new Remove();
+			m_Filter.setAttributeIndices("27");
+            m_Filter.setInputFormat(normalizedDataset);
+			normalizedDataset = Filter.useFilter(normalizedDataset, m_Filter);
+			//==============================================================================
+			
+			normalizedDataset.setClassIndex(26);
+			indexClass = normalizedDataset.classIndex();
+			Standardization nm = new Standardization(load.train_data);
+			normalizedDataset = nm.standardize();
 
           System.out.println();
           System.out.println("Normalized data train");
           System.out.println(normalizedDataset);
-
+          normalizedDataset.setClassIndex(26);
         } catch (Exception e) {
 
           e.printStackTrace();
 
         }
         
+        // Print ke layar setelah di standardisasi
+        System.out.println(normalizedDataset);
+        
         // initialize the amount of layer
-        inputCount_main = loaddata.banyakatribut;
-        outputCount_main = loaddata.banyakkelas;
+        inputCount_main = normalizedDataset.numAttributes()-1;
+        outputCount_main = normalizedDataset.numClasses();
+        System.out.println("input "+inputCount_main);
+        System.out.println("output "+outputCount_main);
 
         // start the training
         WekaFeed weka = new WekaFeed(inputCount_main, 
@@ -879,12 +917,13 @@ neuralNode[i][j].edges.put(neuralNode[i+1][k].id, 0.5);
                                     outputCount_main);
 
         //sebelum FFNN
-        System.out.println("SEBELUM FFNN=====================");
-        weka.printAllEdge();
-        System.out.println("NODE############################");
-        weka.printAllNode();
-        System.out.println("===============================");
-        System.out.println("");
+        //System.out.println("SEBELUM FFNN=====================");
+        //weka.printAllEdge();
+        //System.out.println("NODE############################");
+        //weka.printAllNode();
+        //System.out.println("===============================");
+        //System.out.println("");
+
 
         try {
             
@@ -904,10 +943,59 @@ neuralNode[i][j].edges.put(neuralNode[i+1][k].id, 0.5);
         
         //setelah FFNN
         System.out.println("SETELAH FFNN=====================");
+        System.out.println("NODE############################");
+        weka.printAllEdge();
+        
+        
+        
+        // EVALUASI DATA TEST 
+        
+        // Membaca Data test
+		
+		datatestLoc = "D:\\wekafolder\\data\\student-mat-test.arff";
+        loaddata load2 = new loaddata(datatestLoc);
+        
+        // Standardisasi
+        normalizedDataset = load2.train_data;
+        
+        try {
+			
+			//setClassIndex diisikan sesuai dengan index class yang akan dicari
+			//untuk team diisikan 12
+			//untuk student diisikan 26
+			normalizedDataset.setClassIndex(26);
+			
+			
+			
+			//Bagian ini komentarnya di hilangkan untuk student_train dan Student-mat-test 
+			
+			//==============================================================================
+			Remove m_Filter = new Remove();
+			m_Filter.setAttributeIndices("27");
+			m_Filter.setInputFormat(normalizedDataset);
+			normalizedDataset = Filter.useFilter(normalizedDataset, m_Filter);
+			//==============================================================================
+			
+			normalizedDataset.setClassIndex(26);
+			indexClass = normalizedDataset.classIndex();
+			Standardization nm = new Standardization(load.train_data);
+			normalizedDataset = nm.standardize();
+
+			System.out.println();
+			System.out.println("Normalized data train");
+			System.out.println(normalizedDataset);
+			normalizedDataset.setClassIndex(26);
+
+        } catch (Exception e) {
+
+          e.printStackTrace();
+
+        }
+        Instances data1 = normalizedDataset;
+        Instances data2 = normalizedDataset;
         
         try{
-          Instances data1 = normalizedDataset;
-          Instances data2 = normalizedDataset;
+          
           Evaluation eval = new Evaluation(data1);
           eval.evaluateModel(weka, data2);
           System.out.println(eval.toSummaryString("\nResults ", false));
@@ -956,22 +1044,6 @@ neuralNode[i][j].edges.put(neuralNode[i+1][k].id, 0.5);
         // normalize the data train
         Instances normalizedDataset = load.train_data;
         
-        try {
-
-          Normalization nm = new Normalization(load.train_data);
-          normalizedDataset = nm.normalize();
-
-          System.out.println();
-          System.out.println("Normalized data test");
-          System.out.println(normalizedDataset);
-
-        } catch (Exception e) {
-
-          e.printStackTrace();
-
-        }
-        
-        
         try{
           Instances data1 = normalizedDataset;
           Instances data2 = normalizedDataset;
@@ -987,55 +1059,7 @@ neuralNode[i][j].edges.put(neuralNode[i+1][k].id, 0.5);
         
         
     }
-    
-    
-//    weka.assignInput(new double[]{1,2,3,4});
-//    //weka.assignPostEdgeWeight(0, new double[]{4,5,6,7});
-//    //weka.assignPreEdgeWeight(5, new double[]{10,11,12,13});
-//    //weka.assignEdge(10, 15, 99);
-//    System.out.println("Sebelum Dilakukan Feed Forward =>" );
-//    System.out.println("Value dan eror masing-masing node");
-//    weka.printAllNode();
-//    System.out.println();
-//    System.out.println("Bobot dari suatu node menuju note dengan ID");
-//    weka.printAllEdge();
-//    weka.feedforward();
-//    System.out.println();
-//    System.out.println("Setelah Dilakukan Feed Forward =>" );
-//    System.out.println();
-//    System.out.println("Value dan eror masing-masing node");
-//    weka.printAllNode();
-//    System.out.println();
-//    weka.backpropagation(new double[]{1,0,0}); // Hanya memiliki satu node di layer output
-//    System.out.println("Setelah dilakukan Back Propagation =>" );
-//    System.out.println();
-//    System.out.println("Value dan eror masing-masing node");
-//    weka.printAllNode();
-//    System.out.println();
-//    System.out.println("Bobot dari suatu node menuju note dengan ID");
-//    weka.printAllEdge();
-//    
-//   
-//    // convert nominal to numeric for class
-//    
-//
-//    
-//    // dataset preprocessing
-//    /*try {
-//    
-//        Normalization nm = new Normalization(load.train_data);
-//        Instances normalizedDataset = nm.normalize();
-//    
-//        System.out.println();
-//       // System.out.println("Normalized data train");
-//       // System.out.println(normalizedDataset);
-//        
-//    } catch (Exception e) {
-//        
-//        e.printStackTrace();
-//       
-//    }
-//    */
+
   }
 
 }

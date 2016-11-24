@@ -24,9 +24,11 @@ public class loaddata {
 				// menyimpan isi file (bagian training data) dalam variabel trainData
 				train_data = arff.getData();
                                 
-                                train_data.setClassIndex(train_data.numAttributes()-1);
-                                banyakatribut=train_data.numAttributes()-1;
-                                banyakkelas=train_data.numClasses();
+                                //train_data.setClassIndex(train_data.numAttributes()-1);
+                                //train_data.setClassIndex(26);
+                                //WekaFeed.indexClass=(train_data.classIndex());
+                                //banyakatribut=train_data.numAttributes()-1;
+                                //banyakkelas=train_data.numClasses();
 				reader.close();
 		
 		} catch (IOException e) {
